@@ -219,6 +219,8 @@ For trainnig, see remote GPU resources
 +-----------------------------------------------------------------------------+
 ```
 
+I have prepared a demo for using Mask RCNN to detect instances in a video using colab. Click [here](https://github.com/yiakwy/SpatialPerceptron) to obtain the example running in colab from within chrome. 
+
 #### AIStudio \(PaddlePaddle Team\)
 
 ### Overview
