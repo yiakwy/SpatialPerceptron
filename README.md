@@ -1,14 +1,16 @@
 ## Installation
 
-| Author | Date      | Version | 
-|-------:|----------:|--------:|
-| Yi     | 2019.5.11 | 0.1     |
+| Author | Contact          | Date      | Version | Action  | 
+|-------:|-----------------:|----------:|--------:|--------:|
+| Yi     | yiak.wy@gmail.com| 2019.5.11 | 0.1     | Created |
 
 ### Data
 
 #### Preparation
 
 Before downloading data, we prefer mount a external HDD in a predefined directory and make local soft links to that directory to access data.
+
+I have observed some choatic in daily work, and decided to make it clear and document the work flow so that more poeple can benefit from my description. 
 
 ##### Ubuntu
 
@@ -81,7 +83,7 @@ $ diskutil list
    #:                       TYPE NAME                    SIZE       IDENTIFIER
 ```
 
-Data for software should be prepared in an external disk drive. Suppose the identifier is `disk2s1`. To make software consitant in different systems, we are expected to make a soft link to the data folder and make it visiable in file system. Since we are changing the volume name to `/data`, we need to mount it manually.
+Data for software should be prepared in an external disk drive. Suppose the identifier is `disk2s1`. To make software consistant in different systems, we are expected to make a soft link to the data folder and make it visiable in the current file system. Since we are changing the volume name to `/data`, we need to mount it manually.
 
 Suppose the disk is `disk2s1`, and we know that default file system in mac is of "MacOS Extended Format", do :
 
@@ -98,9 +100,9 @@ Check
 
 to see whether you are successful.
 
-#### Colab
+##### Colab
 
-Google Coab uses Ubuntu 18.04.2 LTS \(Binoic Beaver\) OS. By default there are two disks available for data storage.
+Google Coab uses Ubuntu 18.04.2 LTS \(Binoic Beaver\) OS. By default there are two disks available for data storage:
 
 ```txt
 Filesystem              Size  Used Avail Use% Mounted on
@@ -113,9 +115,11 @@ shm                     6.0G     0  6.0G   0% /dev/shm
 tmpfs                   6.4G     0  6.4G   0% /sys/firmware
 ```
 
-In case that more data space need, and it often happens if you want to train different models by exploring different datasets.
+In case that more data space needed, that it often happens if you want to train different models by exploring different datasets, you need to persistent data, directories and softwares developed in a writable disk.
 
-gcloud provides you with oauth2 scheme to authenticate yourself for the google products. Once you successfully connect to the cloud, you are able to mount google drive as an oridinary disk.
+One of the reomote storages you could use is google driver of which storages is up to 8.0 E. bytes. 
+
+gcloud provides you with oauth2 scheme to authenticate yourself for the google products. Once you successfully connect to the cloud, you are able to mount google drives as oridinary disks.
 
 ```jupyter
 # mount google driver 
@@ -138,7 +142,7 @@ vcode = getpass.getpass()
 !google-drive-ocamlfuse drive
 ```
 
-Run the following command in jupyter 
+Details can be found at [External data: Drive, Sheets, and Cloud Storage](https://colab.research.google.com/notebooks/io.ipynb#scrollTo=c2W5A2px3doP). Run the following command in jupyter 
 
 > !df - h
 
@@ -152,6 +156,24 @@ tmpfs                   6.4G   12K  6.4G   1% /var/colab
 shm                     6.0G     0  6.0G   0% /dev/shm
 tmpfs                   6.4G     0  6.4G   0% /sys/firmware
 google-drive-ocamlfuse  8.0E  1.8G  8.0E   1% /content/drive
+```
+
+All the data and codes should be persistent in an HDD, because where the execuation of colab is in a virtual machine which is recycled when idle for a while and cannot live long.
+
+Morover, the default root of working directory `/content` is defined on top of [docker overlay storage driver](https://docs.docker.com/storage/storagedriver/overlayfs-driver/), where the implementation of which is ensured that each time a vm starts, content written onto it is erased and you cannot see it again.
+
+More details of implementation of docker `overlay` storage driver, and `overlay2` storage driver are described in [here](https://docs.docker.com/storage/storagedriver/overlayfs-driver/#how-the-overlay-driver-works) and [here](https://docs.docker.com/storage/storagedriver/overlayfs-driver/#how-the-overlay2-driver-works) respectively
+
+Hence it is highly recommended by google to load data into a persistent storage via colab api.
+
+
+
+#### Coco
+
+```shell
+git clone https://github.com/cocodataset/cocoapi ${ROOT}/Github/coco
+make install -C ${ROOT}/Github/coco/PythonAPI
+
 ```
 
 ### GPU Resources
@@ -202,10 +224,17 @@ For trainnig, see remote GPU resources
 ### Overview
 
 
+
 ### Installation
 
+```shell
+cd ${Project_Root}/python
+pip install --upgrade setuptools
+pip install --default-timeout=100 requirements.txt 
+```
 
 ### Quickstart
+
 
 
 #### Train/Test
