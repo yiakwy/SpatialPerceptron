@@ -88,6 +88,7 @@ Data for software should be prepared in an external disk drive. Suppose the iden
 Suppose the disk is `disk2s1`, and we know that default file system in mac is of "MacOS Extended Format", do :
 
 ```shell
+(tensorflow) $ diskutil unmount /dev/disk2s1
 (tensorflow) $ sudo mount_hfs /dev/disk2s1 /data
 (tensorflow) $ cd /data
 (tensorlfow) $ ls
@@ -98,7 +99,7 @@ Check
 
 > df -lh 
 
-to see whether you are successful.
+to see whether you are successful. To make the mount path permanent, set entry point in `/etc/fstab`
 
 ##### Colab
 
@@ -219,9 +220,11 @@ For trainnig, see remote GPU resources
 +-----------------------------------------------------------------------------+
 ```
 
-I have prepared a demo for using Mask RCNN to detect instances in a video using colab. Click [here](https://colab.research.google.com/drive/1A5ZoDc9PhYq_Rgvz8C8gPe8N5bWoo4xk) and [here](https://github.com/yiakwy/SpatialPerceptron/blob/master/notebooks/prepare_colab.ipynb) to obtain the example running in colab from within chrome. 
+I have prepared a demo for using Mask RCNN to detect instances in a video using colab. Click [Colab book](https://colab.research.google.com/drive/1A5ZoDc9PhYq_Rgvz8C8gPe8N5bWoo4xk) and [Github](https://github.com/yiakwy/SpatialPerceptron/blob/master/notebooks/prepare_colab.ipynb) to obtain the example running in colab from within chrome. 
 
 #### AIStudio \(PaddlePaddle Team\)
+
+The [AIStudio book](https://aistudio.baidu.com/aistudio/projectdetail/60969) is an anology of Colab book. Since Colab don't support build essentials and dynamic disk mounting, we build softwares manually. To obtain support of Tesla V100 (16GB memory), contact me for invitation code.
 
 ### Overview
 
