@@ -3,9 +3,12 @@ import sys
 import argparse
 import functools
 import timeit
+from datetime import datetime
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score
+import tensorflow as tf
+from keras import backend as K
 
 
 def add_path(path):
@@ -60,6 +63,24 @@ def parse_args(raw_args):
     FLAGS = parser.parse_args(raw_args)
     return FLAGS
 
+# adopt from https://github.com/huaweicloud/ModelArts-Lab/blob/master/train_inference/image_recognition/codes/dog_and_cat_train.py
+# convert Keras model to TF model
+def save_keras_model_to_serving(model, export_path):
+    signature = tf.saved_model.signature_def_utils.predict_signature_def(
+        inputs={'images': model.input}, outputs={'logits': model.output})
+    builder = tf.saved_model.builder.SavedModelBuilder(export_path)
+
+    legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
+
+    builder.add_meta_graph_and_variables(
+        sess=K.get_session(),
+        tags=[tf.saved_model.tag_constants.SERVING],
+        signature_def_map={
+            'segmentation': signature,
+        },
+        legacy_init_op=legacy_init_op)
+    builder.save()
+
 def Program(raw_args):
     FLAGS = parse_args(raw_args)
     
@@ -76,10 +97,14 @@ def Program(raw_args):
     print(model.summary())
     
     # Load pretrained weights, see `notebooks/ModelArts-Explore_ex1`
-    model.load_weights(config.CAT_DOG_PRETRAINED_MODEL)
+    check_point = "{}/weights.best.checkpoint.hdf5".format(SAVER)
+    if os.path.isfile(check_point):
+        model.load_weights()
+    else:
+        model.load_weights(config.CAT_DOG_PRETRAINED_MODEL)
 
     # Prepare data
-    from dataset import CatDogDataset
+    from dataset import CatDogDataset, Preprocess_img
     cat_dog_dataset = CatDogDataset(name=FLAGS.dataset_name)
 
     cat_dog_dataset.load_dataset()
@@ -89,7 +114,7 @@ def Program(raw_args):
     # Trainning
     start = timeit.default_timer()
     # For large dataset, we prefer to use SGD to digest dataset quickly
-    model.fit(X_train, y_train, optimizer_type="sgd")
+    # model.fit(X_train, y_train, optimizer_type="sgd")
     elapsed = timeit.default_timer() - start
     print("Trainnig complete, elapsed: %s(s)" % elapsed)
 
@@ -110,3 +135,26 @@ def Program(raw_args):
     acc = accuracy_score(cat_dog_dataset.test_labels, predictions)
 
     print('训练得到的猫狗识别模型的准确度是-pure VGG16：',acc)
+
+    # save accuracy to a local file
+    metric_file_name = os.path.join(SAVER, 'metric.json')
+    metric_file_content = """
+{"total_metric": {"total_metric_values": {"accuracy": %0.4f}}}
+    """ % acc
+
+    with open(metric_file_name, "w") as f:
+        f.write(metric_file_content)
+    
+    model_proto = "{}/model".format(SAVER)
+    if os.path.isdir(model_proto):
+        os.system('rm -rf %s' % model_proto)
+    save_keras_model_to_serving(model.model, model_proto)
+
+    EXPORTED_PATH="{}/output/preprocessor.json".format(config.ROOT)
+    print("persist preprocessor data to %s" % EXPORTED_PATH)
+    cat_dog_dataset.preprocessor.save(EXPORTED_PATH)
+    
+    # check
+    preprocessor = Preprocess_img()
+    preprocessor.load_from(EXPORTED_PATH)
+    

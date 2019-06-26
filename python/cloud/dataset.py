@@ -6,6 +6,12 @@ from sklearn.model_selection import train_test_split
 import keras
 import numpy as np
 import pandas as pd
+import json
+import io
+try:
+    to_unicode = unicode
+except NameError:
+    to_unicode = str
 
 
 # import config object
@@ -19,7 +25,7 @@ class Preprocess_img():
         self.mean = None
         self.std = None
 
-    def __call__(self, data, labels):
+    def __call__(self, data, labels=None):
         data = data.astype('float32')
         if  self.close is False:
             # self.mean = np.mean(data, axis=(0, 1, 2, 3))
@@ -34,8 +40,32 @@ class Preprocess_img():
             self.close = True
 
         data = (data - self.mean) / (self.std + 1e-6)
-        labels = keras.utils.to_categorical(labels, config.NUM_CLASSES)
+        if  labels is not None:
+            labels = keras.utils.to_categorical(labels, config.NUM_CLASSES)
         return (data, labels)
+
+    def save(self, exported_path):
+        data = {
+        "mean": to_unicode(self.mean),
+        "std": to_unicode(self.std)
+        }
+        with io.open(exported_path, 'w', encoding='utf8') as f:
+            dumped = json.dumps(data,
+                    indent=4, sort_keys=True,
+                    separators=(',', ': '), ensure_ascii=False)
+
+            f.write(to_unicode(dumped))
+
+    @staticmethod
+    def load_from(exported_path):
+        with open(exported_path, 'r') as f:
+            data = json.load(f)
+
+            preprocessor = Preprocess_img()
+            preprocessor.mean = data['mean']
+            preprocessor.std = data['std']
+            return preprocessor
+
 
 def read_img(file_path):
     if not os.path.exists(file_path):
@@ -163,6 +193,10 @@ class CatDogDataset(Dataset):
     @property
     def test_data(self):
         return self._test_data
+
+    @property
+    def preprocessor(self):
+        return self._preprocessor
 
     @property
     def test_labels(self):
