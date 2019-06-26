@@ -6,5 +6,8 @@ python/cloud/pretrained/
 python/cloud/output/
 python/paddle_mask_rcnn/
 notebooks/.ipynb_checkpoints
+__pycache__/
 thirdparites/
+*.pyc
+*.swp
 scripts/autologin_workstation.sh
