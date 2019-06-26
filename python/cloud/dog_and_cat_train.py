@@ -1,0 +1,112 @@
+import os
+import sys
+import argparse
+import functools
+import timeit
+import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score
+
+
+def add_path(path):
+    if path not in sys.path:
+        print("load path %s" % path)
+        sys.path.insert(0, path)
+
+pwd = os.path.dirname(os.path.realpath(__file__))
+print(pwd)
+
+# Add config to python path
+add_path(os.path.join(pwd, '..', 'config'))
+add_path(os.path.join(pwd, '.'))
+add_path(os.path.join(pwd, 'models'))
+
+from config import Settings
+from models import VGG16
+
+class CatDogConfig(Settings):
+    pass
+
+config = CatDogConfig("settings")
+
+def add_arguments(argname, type, default, help, argparser, **kwargs):
+    """Add argparse's argument.
+    Usage:
+    .. code-block:: python
+        parser = argparse.ArgumentParser()
+        add_argument("name", str, "Jonh", "User name.", parser)
+        args = parser.parse_args()
+    """
+    type = distutils.util.strtobool if type == bool else type
+    argparser.add_argument(
+        "--" + argname,
+        default=default,
+        type=type,
+        help=help + ' Default: %(default)s.',
+        **kwargs)
+
+def parse_args(raw_args):
+    """Huawei Cloud Case
+    """
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_arg = functools.partial(add_arguments, argparser=parser)
+
+    add_arg("max_epochs", int, 30, 'Number of trainning iterations')
+    add_arg("data_url", str, 'cache/data', 'Dataset directory')
+    add_arg("batch_size", int, 32, "Number of training iterations" )
+    add_arg("num_gpus", int , 1, 'Number of GPUs')
+    add_arg("dataset_name", str, 'dog_and_cat_200', 'Name of the used dogs and cats dataset')
+
+    FLAGS = parser.parse_args(raw_args)
+    return FLAGS
+
+def Program(raw_args):
+    FLAGS = parse_args(raw_args)
+    
+    # update config object
+    config.BATCH_SIZE = FLAGS.batch_size
+
+    # Load Models
+    SAVER="{}/output/catdog".format(config.ROOT)
+
+    if not os.path.isdir(SAVER):
+        os.makedirs(SAVER)
+
+    model = VGG16("training", config, SAVER)
+    print(model.summary())
+    
+    # Load pretrained weights, see `notebooks/ModelArts-Explore_ex1`
+    model.load_weights(config.CAT_DOG_PRETRAINED_MODEL)
+
+    # Prepare data
+    from dataset import CatDogDataset
+    cat_dog_dataset = CatDogDataset(name=FLAGS.dataset_name)
+
+    cat_dog_dataset.load_dataset()
+    X_train, y_train = cat_dog_dataset.train_reader()
+    X_test, _ = cat_dog_dataset.validation_reader()
+
+    # Trainning
+    start = timeit.default_timer()
+    # For large dataset, we prefer to use SGD to digest dataset quickly
+    model.fit(X_train, y_train, optimizer_type="sgd")
+    elapsed = timeit.default_timer() - start
+    print("Trainnig complete, elapsed: %s(s)" % elapsed)
+
+    predictions = []
+    detected = model.infer(X_test)
+
+    for ret in detected:
+        predictions.append(np.argmax(ret))
+        
+    df = pd.DataFrame({
+        'data': cat_dog_dataset.test_data,
+        'labels': cat_dog_dataset.test_labels,
+        'prediction': predictions
+    })
+
+    print("evaluation snapshot, top 10: ", df.head(10))
+
+    acc = accuracy_score(cat_dog_dataset.test_labels, predictions)
+
+    print('训练得到的猫狗识别模型的准确度是-pure VGG16：',acc)

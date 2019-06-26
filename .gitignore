@@ -1,5 +1,10 @@
 3-开题报告-王磊.pptx
 3-答辩_temp_01-王磊.pptx
-/data/
-/thirdparites/
-/scripts/autologin_workstation.sh
+data/
+python/cloud/data/
+python/cloud/pretrained/
+python/cloud/output/
+python/paddle_mask_rcnn/
+notebooks/.ipynb_checkpoints
+thirdparites/
+scripts/autologin_workstation.sh
