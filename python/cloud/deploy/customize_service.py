@@ -21,7 +21,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # output path
-EXPORTED_PATH="preprocessor.json"#"{}/preprocessor.json".format(config.OUTPUT_DIR) # copy preprocessor.json to the S3 `${target_url}/{VERSION}/model/`
+EXPORTED_PATH="preprocessor.json" # copy preprocessor.json to the S3 `${target_url}/{VERSION}/model/`
 
 preprocessor = Preprocess_img.load_from(EXPORTED_PATH)
 cat_dog_dataset = CatDogDataset()

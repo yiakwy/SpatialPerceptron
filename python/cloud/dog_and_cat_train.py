@@ -166,7 +166,7 @@ def Program(raw_args):
         os.system('rm -rf %s' % model_proto)
     save_keras_model_to_serving(model.model, model_proto)
 
-    EXPORTED_PATH="{}/preprocessor.json".format(config.OUTPUT_DIR)
+    EXPORTED_PATH="{}/model/preprocessor.json".format(SAVER)
     logging.info("persist preprocessor data to %s" % EXPORTED_PATH)
     cat_dog_dataset.preprocessor.save(EXPORTED_PATH)
     

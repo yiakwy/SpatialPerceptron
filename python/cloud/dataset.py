@@ -4,7 +4,7 @@ import random
 import glob
 from sklearn.model_selection import train_test_split
 try:
-import keras
+    import keras
 except:
     print("The deployment environment does not install keras!")
 import numpy as np
