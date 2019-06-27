@@ -9,6 +9,10 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 import tensorflow as tf
 from keras import backend as K
+try:
+    from moxing.framework import file as CloudAPI
+except:
+    CloudAPI = None
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -34,7 +38,6 @@ class CatDogConfig(Settings):
 
 config = CatDogConfig("settings")
 logging.info("DATA DIR: %s" % config.DATA_DIR)
-
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
     """Add argparse's argument.
@@ -95,6 +98,10 @@ def Program(raw_args):
     config.BATCH_SIZE = FLAGS.batch_size
     config.GPUS = FLAGS.num_gpus
 
+    # sync files from S3 to local storage unit
+    if CloudAPI is not None:
+        CloudAPI.copy_parallel(FLAGS.data_url, config.DATA_DIR)
+    
     # Load Models
     SAVER="{}/catdog".format(config.OUTPUT_DIR)
 
@@ -122,7 +129,7 @@ def Program(raw_args):
     # Trainning
     start = timeit.default_timer()
     # For large dataset, we prefer to use SGD to digest dataset quickly
-    # model.fit(X_train, y_train, optimizer_type="sgd")
+    model.fit(X_train, y_train, optimizer_type="sgd")
     elapsed = timeit.default_timer() - start
     logging.info("Trainnig complete, elapsed: %s(s)" % elapsed)
 
@@ -138,11 +145,11 @@ def Program(raw_args):
         'prediction': predictions
     })
 
-    logging.info("evaluation snapshot, top 10: ", df.head(10))
+    print("evaluation snapshot, top 10: ", df.head(10))
 
     acc = accuracy_score(cat_dog_dataset.test_labels, predictions)
 
-    logging.info('训练得到的猫狗识别模型的准确度是-pure VGG16：',acc)
+    print('训练得到的猫狗识别模型的准确度是-pure VGG16：',acc)
 
     # save accuracy to a local file
     metric_file_name = os.path.join(SAVER, 'metric.json')
@@ -162,6 +169,10 @@ def Program(raw_args):
     logging.info("persist preprocessor data to %s" % EXPORTED_PATH)
     cat_dog_dataset.preprocessor.save(EXPORTED_PATH)
     
+    # copy local output to remote S3 storage unit
+    if CloudAPI is not None:
+        CloudAPI.copy_parallel(config.OUTPUT_DIR, FLAGS.train_url)
+
     # check
     preprocessor = Preprocess_img()
     preprocessor.load_from(EXPORTED_PATH)

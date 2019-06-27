@@ -3,8 +3,8 @@ import sys
 
 root = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, root)
-sys.path.insert(0, "%s/core" % root)
 sys.path.insert(0, "%s/lib" % root)
+sys.path.insert(0, "%s/core" % root)
 sys.path.insert(0, "%s/cloud" % root)
 sys.path.insert(0, "%s/config" % root)
 

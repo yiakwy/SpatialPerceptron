@@ -29,15 +29,18 @@ class Preprocess_img():
     def __call__(self, data, labels=None):
         data = data.astype('float32')
         if  self.close is False:
-            # self.mean = np.mean(data, axis=(0, 1, 2, 3))
-            # self.std = np.std(data, axis=(0, 1, 2, 3))
-            from keras.datasets import cifar10
+            self.mean = np.mean(data, axis=(0, 1, 2, 3))
+            self.std = np.std(data, axis=(0, 1, 2, 3))
+            
             # LOADING TRAINING DATA
-            (train_data, train_label), (test_data, test_label) = cifar10.load_data()
-            train_data = train_data.astype('float32')
+            from keras.datasets import cifar10
+            
+            # (train_data, train_label), (test_data, test_label) = cifar10.load_data()
+            # train_data = train_data.astype('float32')
+            
             # cifar10 mean-std normalization
-            self.mean = np.mean(train_data, axis=(0,1,2,3))
-            self.std = np.std(train_data, axis=(0,1,2,3))
+            # self.mean = np.mean(train_data, axis=(0,1,2,3))
+            # self.std = np.std(train_data, axis=(0,1,2,3))
             self.close = True
 
         data = (data - self.mean) / (self.std + 1e-6)
