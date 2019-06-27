@@ -18,6 +18,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 def add_path(path):
+    path = os.path.abspath(path)
     if path not in sys.path:
         logging.info("load path %s" % path)
         sys.path.insert(0, path)
@@ -171,7 +172,7 @@ def Program(raw_args):
     
     # copy local output to remote S3 storage unit
     if CloudAPI is not None:
-        CloudAPI.copy_parallel(config.OUTPUT_DIR, FLAGS.train_url)
+        CloudAPI.copy_parallel(SAVER, FLAGS.train_url)
 
     # check
     preprocessor = Preprocess_img()

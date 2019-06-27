@@ -3,7 +3,10 @@ import cv2
 import random
 import glob
 from sklearn.model_selection import train_test_split
+try:
 import keras
+except:
+    print("The deployment environment does not install keras!")
 import numpy as np
 import pandas as pd
 import json
@@ -44,7 +47,7 @@ class Preprocess_img():
             self.std = np.std(data, axis=(0, 1, 2, 3))
             
             # LOADING TRAINING DATA
-            from keras.datasets import cifar10
+            # from keras.datasets import cifar10
             
             # (train_data, train_label), (test_data, test_label) = cifar10.load_data()
             # train_data = train_data.astype('float32')
