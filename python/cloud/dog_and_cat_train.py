@@ -9,15 +9,17 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 import tensorflow as tf
 from keras import backend as K
+import logging
 
+logging.basicConfig(level=logging.INFO)
 
 def add_path(path):
     if path not in sys.path:
-        print("load path %s" % path)
+        logging.info("load path %s" % path)
         sys.path.insert(0, path)
 
 pwd = os.path.dirname(os.path.realpath(__file__))
-print(pwd)
+logging.info(pwd)
 
 # Add config to python path
 add_path(os.path.join(pwd, '..', 'config'))
@@ -31,6 +33,8 @@ class CatDogConfig(Settings):
     pass
 
 config = CatDogConfig("settings")
+logging.info("DATA DIR: %s" % config.DATA_DIR)
+
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
     """Add argparse's argument.
@@ -55,9 +59,11 @@ def parse_args(raw_args):
     add_arg = functools.partial(add_arguments, argparser=parser)
 
     add_arg("max_epochs", int, 30, 'Number of trainning iterations')
-    add_arg("data_url", str, 'cache/data', 'Dataset directory')
+    add_arg("data_url", str, config.DATA_DIR, 'S3 dataset directory path')
+    add_arg("train_url", str, os.path.join(config.OUTPUT_DIR, "services"), 'S3 trainning model output directory path')
     add_arg("batch_size", int, 32, "Number of training iterations" )
     add_arg("num_gpus", int , 1, 'Number of GPUs')
+    # directly used by dataset object
     add_arg("dataset_name", str, 'dog_and_cat_200', 'Name of the used dogs and cats dataset')
 
     FLAGS = parser.parse_args(raw_args)
@@ -67,7 +73,7 @@ def parse_args(raw_args):
 # convert Keras model to TF model
 def save_keras_model_to_serving(model, export_path):
     signature = tf.saved_model.signature_def_utils.predict_signature_def(
-        inputs={'images': model.input}, outputs={'logits': model.output})
+        inputs={'images': model.inputs[0]}, outputs={'logits': model.outputs[0]})
     builder = tf.saved_model.builder.SavedModelBuilder(export_path)
 
     legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
@@ -85,16 +91,18 @@ def Program(raw_args):
     FLAGS = parse_args(raw_args)
     
     # update config object
+    config.EPOCHS = FLAGS.max_epochs
     config.BATCH_SIZE = FLAGS.batch_size
+    config.GPUS = FLAGS.num_gpus
 
     # Load Models
-    SAVER="{}/output/catdog".format(config.ROOT)
+    SAVER="{}/catdog".format(config.OUTPUT_DIR)
 
     if not os.path.isdir(SAVER):
         os.makedirs(SAVER)
 
     model = VGG16("training", config, SAVER)
-    print(model.summary())
+    logging.info(model.summary())
     
     # Load pretrained weights, see `notebooks/ModelArts-Explore_ex1`
     check_point = "{}/weights.best.checkpoint.hdf5".format(SAVER)
@@ -116,7 +124,7 @@ def Program(raw_args):
     # For large dataset, we prefer to use SGD to digest dataset quickly
     # model.fit(X_train, y_train, optimizer_type="sgd")
     elapsed = timeit.default_timer() - start
-    print("Trainnig complete, elapsed: %s(s)" % elapsed)
+    logging.info("Trainnig complete, elapsed: %s(s)" % elapsed)
 
     predictions = []
     detected = model.infer(X_test)
@@ -130,11 +138,11 @@ def Program(raw_args):
         'prediction': predictions
     })
 
-    print("evaluation snapshot, top 10: ", df.head(10))
+    logging.info("evaluation snapshot, top 10: ", df.head(10))
 
     acc = accuracy_score(cat_dog_dataset.test_labels, predictions)
 
-    print('训练得到的猫狗识别模型的准确度是-pure VGG16：',acc)
+    logging.info('训练得到的猫狗识别模型的准确度是-pure VGG16：',acc)
 
     # save accuracy to a local file
     metric_file_name = os.path.join(SAVER, 'metric.json')
@@ -150,8 +158,8 @@ def Program(raw_args):
         os.system('rm -rf %s' % model_proto)
     save_keras_model_to_serving(model.model, model_proto)
 
-    EXPORTED_PATH="{}/output/preprocessor.json".format(config.ROOT)
-    print("persist preprocessor data to %s" % EXPORTED_PATH)
+    EXPORTED_PATH="{}/preprocessor.json".format(config.OUTPUT_DIR)
+    logging.info("persist preprocessor data to %s" % EXPORTED_PATH)
     cat_dog_dataset.preprocessor.save(EXPORTED_PATH)
     
     # check

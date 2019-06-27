@@ -12,7 +12,8 @@ try:
     to_unicode = unicode
 except NameError:
     to_unicode = str
-
+import logging
+logging.basicConfig(level=logging.INFO)
 
 # import config object
 from dog_and_cat_train import config
@@ -116,7 +117,7 @@ class CatDogDataset(Dataset):
         self._data_path = datapath or os.path.join(config.DATA_DIR, name)
         if not os.path.isdir(self._data_path):
             os.mkdir(self._data_path)
-        self._dataset_path = os.path.join(config.ROOT, 'data', "{}.tar.gz".format(name))
+        self._dataset_path = os.path.join(config.DATA_DIR, "{}.tar.gz".format(name))
         self._mode = mode
         self._RANDOM_SAMPLING_ON=True
         # Follow Cifar10 conventions
@@ -136,16 +137,16 @@ class CatDogDataset(Dataset):
     def load_dataset(self):
         data_cmpr = self._dataset_path
         if os.path.isfile(data_cmpr):
-            print("uncmpr %s to %s" % (data_cmpr, self._data_path))
+            logging.info("uncmpr %s to %s" % (data_cmpr, self._data_path))
             os.system('tar xf %s -C %s' % (data_cmpr, config.DATA_DIR))
         else:
-            print("The dataset <%s> does not exist!" % data_cmpr)
+            logging.info("The dataset <%s> does not exist!" % data_cmpr)
             return
 
         # Load data
         labeled_images = list(glob.iglob(os.path.join(self._data_path, "*jpg")))
         labeled_images = sorted(labeled_images, key=lambda x: int(os.path.split(x)[1].split('.')[1]))
-        print("read %s images info" % len(labeled_images))
+        logging.info("read %s images info" % len(labeled_images))
 
         if self._RANDOM_SAMPLING_ON:
             random.shuffle(labeled_images)
@@ -162,8 +163,8 @@ class CatDogDataset(Dataset):
             'data': labeled_images,
             'label': labels
             })
-        print("show top 10 images info")
-        print(dataframe.head(10))
+        logging.info("show top 10 images info")
+        logging.info(dataframe.head(10))
 
         train_data, test_data, train_label, test_label = train_test_split(labeled_images, labels, test_size=0.25, random_state=10)
 

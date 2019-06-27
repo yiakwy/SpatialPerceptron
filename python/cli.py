@@ -26,7 +26,7 @@ cli.py [--<opt>]
     parser = argparse.ArgumentParser(description=__doc__, usage=usage)
     parser.add_argument('-s', '--subShell', help="enter into subShell routine")
     parser.add_argument('-e', '--prog', help="execute a program")
-    # parser.add_argument('argc', nargs=1, type=int)
+    parser.add_argument('argc', nargs=1, type=int)
     parser.add_argument('argv', nargs=argparse.REMAINDER, help="arguments for command")
 
     args = parser.parse_args(raw_args)

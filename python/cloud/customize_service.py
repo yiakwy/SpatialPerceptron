@@ -3,9 +3,11 @@ from model_service.tfserving_model_service import TfServingBaseService
 import numpy as np
 from dog_and_cat_train import config
 from dataset import Preprocess_img, read_img, CatDogDataset
+import logging
+logging.basicConfig(level=logging.INFO)
 
 # output path
-EXPORTED_PATH="{}/output/preprocessor.json".format(config.ROOT)
+EXPORTED_PATH="{}/preprocessor.json".format(config.OUTPUT_DIR)
 
 preprocessor = Preprocess_img.load_from(EXPORTED_PATH)
 cat_dog_dataset = CatDogDataset()
@@ -24,6 +26,7 @@ class dogcat_service(TfServingBaseService):
 
   def _postprocess(self, data):
     outputs = {}
+    logging.info("classifier logits", data['logits'])
     logits = data['logits'][0]
     label_id = np.argmax(logits)
     label = cat_dog_dataset[label_id]
