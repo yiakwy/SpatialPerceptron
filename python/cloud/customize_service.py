@@ -1,7 +1,21 @@
 import cv2
 from model_service.tfserving_model_service import TfServingBaseService
 import numpy as np
-from dog_and_cat_train import config
+
+# import trainning config object
+try:
+    # import the config object used in the trainning program
+    from dog_and_cat_train import config
+except:
+    # or alternatively, construct it manually in a deoplyment environment
+    from config import Settings
+    
+    class CatDogConfig(Settings):
+        pass
+
+    config = CatDogConfig("settings")
+
+# import dataset and its preprocessing utilities
 from dataset import Preprocess_img, read_img, CatDogDataset
 import logging
 logging.basicConfig(level=logging.INFO)
