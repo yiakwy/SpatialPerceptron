@@ -14,9 +14,9 @@
 
 代码在ModelArts`作业训练`执行时，会将输出文件同步到OBS对应的作业版本号下`models`文件夹。此位置比较重要，线上部署时，会根据这个位置读取由keras转换的tensorflow模型开始进行部署。
 
-<img src="images/trained.png" width="800px" />
+<img src="static/images/trained.png" width="800px" />
 
-<img src="images/tensorboard.pgn" width="800px" />
+<img src="static/images/tensorboard.pgn" width="800px" />
 
 ## 部署
 
@@ -26,6 +26,6 @@
 
 > cd codes && sh deploy.sh
 
-<img src="images/deploy.png" width="800px" />
+<img src="static/images/deploy.png" width="800px" />
 
 即可将本地依赖代码文件拷贝到OBS推理入口文件所在文件夹。

@@ -38,6 +38,7 @@ class CatDogConfig(Settings):
     pass
 
 config = CatDogConfig("settings")
+logging.info("ROOT: %s" % config.ROOT)
 logging.info("DATA DIR: %s" % config.DATA_DIR)
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
