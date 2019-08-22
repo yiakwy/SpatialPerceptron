@@ -192,7 +192,18 @@ Intel Iris Pro grpahics card will be considered for Intel  edge computing techno
 
 For trainnig, see remote GPU resources
 
-##### Z370 HD3 Professional WorkStation \(Pending ...\)
+##### Z370 HD3 Professional WorkStation
+
+System configuration
+
+| Item         | Brand    | Product Mode    | Number | Reference Price |
+|-------------:|---------:|----------------:|-------:|-----------------|
+| Mother board | GIGABYTE | Z370 HD3        | 1      | ~               | 
+| GPU Card     | NVIDIA   | GTX 1080, 16 GB | 3      | ~               |
+| CPU          | Intel    | 8 Cores, 32 GB  | 1      | ~               |
+| Power        |          | 16KW            | 1      | ~               |
+| Cooler       |          |                 | 1      | ~               |
+| Hard Disk    |          | 2 TB            | 2      | ~               |
 
 #### Remote
 
